@@ -1,75 +1,79 @@
 import express from "express";
+import bodyParser from "body-parser";
+import { v4 as uuidv4 } from "uuid";
 
 const app = express();
 const port = 8080;
+const addNewUser=[];
+const users = [
+  {"id": "1", "name":"John","surname":"Smith","country":"USA","salary":6000},
+  {"id": "2", "name":"Emma","surname":"Wilson","country":"UK","salary":5500},
+  {"id": "3", "name":"Hans","surname":"Müller","country":"Germany","salary":7000},
+  ];
+  
+// Middleware to parse JSON in the request body
+app.use(bodyParser.json());
 
-const teacherNames = [
-  "Harry Ross",
-  "Bruce Cook",
-  "Carolyn Morgan",
-  "Albert Walker",
-  "Randy Reed",
-  "Larry Barnes",
-  "Lois Wilson",
-  "Jesse Campbell",
-  "Ernest Marvin",
-  "Rogers Kevin",
-  "Jabel Kent",
-  "Mbiira Martin"
-];
-
-const studentNames = [
-  "Alice Johhson",
-  "Bob Smith",
-  "Charlie Buken",
-  "David Silva",
-  "Eva Mendez",
-  "Frank Gashumba",
-  "Grace Nakimera",
-  "Hank Miles",
-  "Ivy Caro",
-  "Jack Chan",
-  "Kelly Hillson",
-  "Leo Jones",
-  "Mia Hayu",
-  "Nathan Best",
-  "Olivia George",
-  "Peter Nakura",
-  "Quinn vivi",
-  "Rachel jina",
-  "Sam Gombya",
-  "Tyler lokik"
-];
 
 // Create a router
 const router = express.Router();
 
-router.get("/", (req, res) => {
+router.get("/", (_req, res) => {
   res.send("Welcome to Home Page");
 });
 
-router.get("/teachers", (req, res) => {
-  res.send("Teachers List");
+router.get("/users", (_req, res) => {
+  res.json(users);
 });
 
-router.get("/students", (req, res) => {
-  res.send("Students List");
+router.get("/users/userWithLowestSalary", (_req, res) => {
+  // Find the user with the lowest salary
+  let userWithLowestSalary = users.reduce((minSalaryUser, currentUser) => {
+    return currentUser.salary < minSalaryUser.salary ? currentUser : minSalaryUser;
+  }, users[0]);
+
+  // Return the user with the lowest salary
+  res.json(userWithLowestSalary);
 });
 
-router.post("/teachers", (req, res) => {
-  //create a random teacher
-  const randomTeacher = {
-    name: teacherNames[Math.floor(Math.random() * teacherNames.length)]
-  };
-  res.json(randomTeacher);
+
+// Find the user with the highest salary
+router.get("/users/userWithHighestSalary", (_req, res) => {
+ // Find the user with the highest salary
+
+  let userWithHighestSalary = users.reduce((maxSalaryUser, currentUser) => {
+    return currentUser.salary > maxSalaryUser.salary ? currentUser : maxSalaryUser;
+}, users[0]);
+
+ // Return the user with the highest salary
+ res.json(userWithHighestSalary);
+});
+// Add new user using POST with a unique ID
+router.post('/users/addUser', (req, res) => {
+  const newUser = {...req.body,  id: uuidv4()}; // Add a unique ID using uuidv4()
+
+  // Add the new user to the array
+  users.push(newUser);
+
+  // Respond with a success message
+  res.json({ message: 'User created successfully'});
+
 });
 
-router.post("/students", (req, res) => {
-  // create a random student
-  const randomStudent = {
-    name: studentNames[Math.floor(Math.random() * studentNames.length)]
-  };
-  res.json(randomStudent);
+
+
+ // GET endpoint to search for a user from Switzerland
+router.get('/user/:country', (req, res) => {
+  const countryToSearch = req.params.country.toLowerCase(); // Convert to lowercase for case-insensitive comparison
+
+  // Find the user from Switzerland
+  const userFromSwitzerland = users.find(user => user.country.toLowerCase() === countryToSearch);
+
+  if (userFromSwitzerland) {
+    res.json(userFromSwitzerland);
+  } else {
+    res.status(404).json({ message: `No person found from ${countryToSearch}` });
+  }
 });
 
 // Mount the router at the root level
